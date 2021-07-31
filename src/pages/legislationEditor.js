@@ -2,17 +2,17 @@ import React from "react"
 import { connect } from 'react-redux'
 import { Button } from '@material-ui/core'
 import isEmpty from 'underscore/modules/isEmpty'
-import { toast } from 'react-toastify';
+//import { toast } from 'react-toastify';
 
 import EditorLayout from "../components/editor/layout"
-import LegislationText from "../components/legislation/legislationText"
+//import LegislationText from "../components/legislation/legislationText"
 import Editor, { LeftPanel, RightPanel } from "../components/editor/editor"
-import StringInput from "../components/editor/input/stringInput"
-import TextInput from "../components/editor/input/textInput"
-import InputWrapper from "../components/editor/input/inputWrapper"
+//import StringInput from "../components/editor/input/stringInput"
+//import TextInput from "../components/editor/input/textInput"
+//import InputWrapper from "../components/editor/input/inputWrapper"
 import Modal from "../components/modal"
-import { updateLegislation, fetchLegislation } from '../actions/legislationActions'
-import * as constants from '../constants'
+import { updateLegislation , fetchLegislation} from '../actions/legislationActions'
+//import * as constants from '../constants'
   
 class LegislationEditor extends React.Component {
 
@@ -22,13 +22,79 @@ class LegislationEditor extends React.Component {
     this.handleChange = this._handleChange.bind(this);
     this.handleSubmit = this._handleSubmit.bind(this);
     this.populateSavedData = this._populateSavedData.bind(this);
+    this.ref = '';
   }
   
   componentDidMount() {
+
+
+    var config = {
+      apiKey: "AIzaSyDBdICGrLQ691Jkn8gZGJbNXvb5OT7Sq9E",
+      databaseURL: "https://posts-9128d-default-rtdb.firebaseio.com/",
+    };
+
+
+    window.firebase.initializeApp(config);
+    var firepadRef = this.getExampleRef();
+    var codeMirror = window.CodeMirror(document.getElementById('firepad-container'), { lineWrapping: true });
+
+
+    var firepad = window.Firepad.fromCodeMirror(firepadRef, codeMirror,
+    { richTextToolbar: true, richTextShortcuts: true });
+    //// Initialize contents.
+    firepad.on('ready', function() {
+      if (firepad.isHistoryEmpty()) {
+        //firepad.setHtml('');
+      }
+      else
+      {
+        var text = firepad.getHtml();
+        document.getElementById('firepad-post').innerHTML = text;
+        
+        //alert(text);
+
+
+
+
+      }
+   
+
+   
+    });
+
+    firepad.on('synced', function(isSynced) {
+      // isSynced will be false immediately after the user edits the pad,
+      // and true when their edit has been saved to Firebase.
+      //document.getElementById('firepad-post').insertAdjacentHTML("afterend",'');
+      console.log(isSynced);
+      //clearBox('firepad-post');
+      document.getElementById('firepad-post').innerHTML = "";
+      if(isSynced)
+      {
+        
+        var text = firepad.getHtml();
+        console.log(text);
+        //this.ref = text;
+        var matches = text.match( /<span[^>]*>([^<]+)<\/span>/ig);
+        console.log(matches[0]);
+        localStorage.setItem('ref', text);
+        localStorage.setItem('title', matches[0]);
+
+        
+        document.getElementById('firepad-post').innerHTML = localStorage.getItem('ref');
+
+      }
+      
+      
+    });
+
+    
     const prev_data = localStorage.getItem('unsaved_legislation')
 
     //If we have a parameter we need to get the info for that contest
     var contest = new URLSearchParams(this.props.location.search).get('contest')
+
+   
     if (this.props.match.params.id) {
       this.props.dispatch(fetchLegislation(this.props.match.params.id))
     } else if (prev_data !== null) {
@@ -40,8 +106,43 @@ class LegislationEditor extends React.Component {
       // Set to true automatically if we aren't requesting data
       this.setState({...this.state, isLoaded: true, contest: contest})
     }
+   
   }
 
+  lineBreakCount(str){
+    /* counts \n */
+    try {
+        return((str.match(/[^\n]*\n[^\n]*/gi).length));
+    } catch(e) {
+        return 0;
+    }
+  }
+
+  getExampleRef() {
+
+    
+    var user = localStorage.email.replace(/[^a-z0-9\s]/gi, '').replace(/[_\s]/g, '-');
+    user = user.substring(0, 6);
+    //console.log(user);
+    
+    //console.log(localStorage.email);
+    //console.log(localStorage.email.replace(/[^a-z0-9\s]/gi, '').replace(/[_\s]/g, '-'));
+    //console.log(window.location.search.split('='));
+
+    var contest = new URLSearchParams(this.props.location.search).get('contest')
+    console.log(contest);
+   
+    //console.log(param);
+    var ref = window.firebase.database().ref('posts/'+user+'/'+contest);
+    //var ref = window.firebase.database().ref('posts/'+user);
+    //var tech = getUrlParameter('contest');
+    //console.log(tech);
+    
+   
+    return ref;
+
+  }
+  
   componentWillReceiveProps(nextProps) {
     this.setState({...this.state, legislation: {...nextProps.legislation}})
   }
@@ -52,7 +153,8 @@ class LegislationEditor extends React.Component {
 
   _checkMandatoryFields() {
     var isValid = true
-    const legislation = this.state.legislation
+    //const legislation = this.state.legislation
+    /*
     if (legislation === undefined) {
       toast.error('Document Empty: Please fill in required Fields');
       isValid = false
@@ -77,7 +179,7 @@ class LegislationEditor extends React.Component {
     } else if (legislation.provisions === undefined || legislation.provisions === "") {
       toast.error('Missing Required Fields: Please include "Provisions"');
       isValid = false
-    }
+    }*/
     return isValid
   }
 
@@ -88,8 +190,11 @@ class LegislationEditor extends React.Component {
       }
       const legislationId = this.props.match.params.id
       const token = this.props.token
-      const data = {...this.state.legislation, contestId: this.state.contest}
+      const data = {...this.state.legislation, contestId: this.state.contest, title: localStorage.getItem('title'),ref: localStorage.getItem('ref')}
+      console.log(data)
       this.props.dispatch(updateLegislation(legislationId, data, token))
+
+    
   }
 
   _populateSavedData(populateData) {
@@ -111,7 +216,7 @@ class LegislationEditor extends React.Component {
   }
 
   render () {
-    const legislation = this.state.legislation
+    //const legislation = this.state.legislation
 
     var modal = null
     if (this.state.savedData && this.state.showModal) {
@@ -126,7 +231,7 @@ class LegislationEditor extends React.Component {
     }
 
     return (
-      <EditorLayout onSubmit={this.handleSubmit} pageTitle="Legislation Editor">
+      <EditorLayout onSubmit={this.handleSubmit}>
       {!this.props.isFetching ?
         <div className="row">
           <div className="col">
@@ -134,103 +239,12 @@ class LegislationEditor extends React.Component {
             <Editor>
               <LeftPanel>
                 <div className="my-3 mx-5">
-                  <InputWrapper title="Title" hint={constants.LEGISLATION_TITLE_HINT} >
-                    <StringInput
-                      placeholder="Title"
-                      className="editor-input col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.title}
-                      name="title"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Chapter" hint={constants.LEGISLATION_CHAPTER_HINT} >
-                    <StringInput
-                      placeholder="Chapter"
-                      className="editor-input col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.chapter}
-                      name="chapter"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="General Laws Section" hint={constants.LEGISLATION_ACCOMPLISHES_HINT} >
-                    <StringInput
-                      placeholder="General Laws Section"
-                      className="editor-input col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.section}
-                      name="section"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Describe what this bill accomplishes in 1-2 sentences" hint={constants.LEGISLATION_ACCOMPLISHES_HINT} >
-                    <StringInput
-                      placeholder="General Laws Section"
-                      className="editor-input col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.accomplishes}
-                      name="accomplishes"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Define the terms you will be using in this legislation" hint={constants.LEGISLATION_TERMS_HINT} >
-                    <TextInput
-                      placeholder="Terms"
-                      className="editor-textarea col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.terms}
-                      name="terms"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Statement of Purpose (expand and go deeper on Bill description)" hint={constants.LEGISLATION_PURPOSE_HINT} >
-                    <TextInput
-                      placeholder="Purpose"
-                      className="editor-textarea col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.purpose}
-                      name="purpose"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Provisions" hint={constants.LEGISLATION_PROVISIONS_HINT} >
-                    <TextInput
-                      placeholder="Provisions"
-                      className="editor-textarea col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.provisions}
-                      name="provisions"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Special Exceptions (optional)" hint={constants.LEGISLATION_EXCEPTIONS_HINT} >
-                    <TextInput
-                      placeholder="Exceptions"
-                      className="editor-textarea col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.exceptions}
-                      name="exceptions"
-                    />
-                  </InputWrapper>
-                  <InputWrapper title="Other Provisions (optional)" hint={constants.LEGISLATION_OTHER_HINT} >
-                    <TextInput
-                      placeholder="Other Provisions"
-                      className="editor-textarea col-12 form-control"
-                      onChange={event => this.handleChange(event)}
-                      value={legislation.other}
-                      name="other"
-                    />
-                  </InputWrapper>
+                <div id="firepad-container"></div>
                 </div>
               </LeftPanel>
               <RightPanel>
                 <div className="mx-5 my-5">
-              <LegislationText
-                title={legislation.title}
-                chapter={legislation.chapter}
-                section={legislation.section}
-                accomplishes={legislation.accomplishes}
-                terms={legislation.terms}
-                purpose={legislation.purpose}
-                provisions={legislation.provisions}
-                competition={legislation.competition}
-                other={legislation.other}
-                exceptions={legislation.exceptions}
-              />
+                <div id="firepad-post"></div>
                 </div>
               </RightPanel>
             </Editor>
