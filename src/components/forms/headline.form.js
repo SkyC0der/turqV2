@@ -1,21 +1,22 @@
-import React,{useState} from "react"
-import Typography from "@material-ui/core/Typography"
 import Button from "@material-ui/core/Button"
 import TextField from "@material-ui/core/TextField"
+import Typography from "@material-ui/core/Typography"
+import React, {useState} from "react"
 import {useDispatch} from "react-redux"
-import { useHistory } from "react-router"
+import {useHistory} from "react-router"
 
-const HeadlineForm = (props) => {
-    const dispatch = useDispatch()
-    const history = useHistory()
-    const [headline,setHeadline] = useState("")
+const HeadlineForm =
+    (props) => {
+      const dispatch = useDispatch()
+      const history = useHistory()
+      const [headline, setHeadline] = useState("")
     const moveToNextTab = () => {
-        dispatch({type:"SAVE_HEADLINE",headline:headline})
-        props.changeTab(1,40)
+    dispatch({type : "SAVE_HEADLINE", headline : headline})
+    props.changeTab(1, 40)
     }
     
     const moveToHome = () => {
-        history.push("/")
+    history.push("/")
     }
     return (
         <div hidden={props.value !== props.index} className="headlineForm">
@@ -43,9 +44,10 @@ const HeadlineForm = (props) => {
                 - Create instate tution for all veterans
             </Typography>
             <Button onClick={moveToHome} classes={{root:"homeButton"}}>Skip to home</Button>
-            <Button onClick={moveToNextTab} classes={{root:"nextButton"}} disabled={headline === ""}>Next</Button>
+            <Button onClick={moveToNextTab} classes={
+    { root: "nextButton" }} disabled={headline === ""}>Next</Button>
         </div>
     )
-}
+    }
 
 export default HeadlineForm
