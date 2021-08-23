@@ -11,6 +11,7 @@ function LegislationList ({legislation}) {
                   description={law.accomplishes}
                   key={law.id}
                   id={law.id}
+                  firebaseRef={law.ref}
                 />)
 return(
     <div className="row">

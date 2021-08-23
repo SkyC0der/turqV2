@@ -4,12 +4,12 @@ import { Link } from "react-router-dom"
 import { LEGISLATION_PAGE_URL } from "../../constants"
 import PropTypes from "prop-types"
 
-function LegislationListItem ({description, title, id}) {
+function LegislationListItem ({description, title, id, firebaseRef}) {
 return(
     <div className="row">
         <div className=" col">
             <hr />
-            <Link to={LEGISLATION_PAGE_URL + "/" + id}><h4>{title}</h4></Link>
+            <Link to={LEGISLATION_PAGE_URL + "/" + id + "?ref=" + firebaseRef}><h4>{title}</h4></Link>
             <Truncate lines={2}>
                 {description}
             </Truncate>

@@ -129,7 +129,7 @@ function updateLegislationFailure(error) {
   }
 }
 
-export function updateLegislation(legislationId, legislation, token) {
+export function updateLegislation(legislationId, legislation) {
 
   var config = {
     method: (legislationId !== undefined ? 'PUT' : 'POST'),

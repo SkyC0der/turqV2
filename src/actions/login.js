@@ -51,11 +51,12 @@ export function login(creds) {
     axios(config)
     .then(res => {
       localStorage.setItem('token', res.data.jwttoken)
-      localStorage.setItem('email', res.data.email)
+      localStorage.setItem('email', creds.email)
       // Dispatch the success action
-      dispatch(loginSuccess(res.data.jwttoken, res.data.email))
+      dispatch(loginSuccess(res.data.jwttoken, creds.email))
     }).catch(function (error) {
       dispatch(loginFailure(error))
+      if(error.response)
       toast.error("Login Failed: " + error.response.data.detail);
     })
   }
